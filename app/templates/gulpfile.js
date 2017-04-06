@@ -1,5 +1,5 @@
 var gulp = require('gulp');
 
-gulp('default',function(){
+gulp.task('default',function(){
     console.log('ccc');
 })

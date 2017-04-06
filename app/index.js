@@ -7,23 +7,31 @@ var generators = require('yeoman-generator'),
     path = require('path'),
     del = require('del'),
     generatorName = 'gulp',
-    win32 = process.platform === 'win32';
+    win32 = process.platform === 'win32',
+    yoName = '';
 
 module.exports = generators.Base.extend({
     constructor: function() {
         generators.Base.apply(this, arguments);
-
+        yoName = require('../package.json').name;
         var dirs = glob.sync('+(src)');
-        log(_.includes(dirs, 'src'));
         //now _.contains has been abandoned by lodash,use _.includes
         if (_.includes(dirs, 'src')) {
-            log(chalk.bold.green('资源已经初始化，退出...'));
+            //是否有node_modules
+            var modules = glob.sync('+(node_modules)');
+            // log(!_.includes(modules,'node_modules'))
+            if(!_.includes(modules,'node_modules')){
+                this.createNodeModules();
+                log(chalk.bold.green('已建立软连接...退出'));
+
+            } else{
+                log(chalk.bold.green('资源已经初始化，退出...'));
+            }
             setTimeout(function() {
                 process.exit(1);
             }, 200);
-        } else {
-            //没有src 需要判断packagejson传入的东西是什么来判断
         }
+
     },
     prompting: function() {
         var done = this.async();
@@ -77,9 +85,19 @@ module.exports = generators.Base.extend({
         var dirs = glob.sync('+(node_modules)');
         if (!_.includes(dirs, 'node_modules')) {
             //创建软连接
-            this.spawnCommand('ln', ['-s', '/usr/local/lib/node_modules/generator-yotest/app/templates/node_modules', 'node_modules']);
-            // this.spawnCommand('gulp');
-            // this.spawnCommand('ln', ['-s', '/usr/local/lib/node_modules/common-packages/'+generatorName+'/node_modules', 'node_modules']);
+            this.createNodeModules();
+
         }
-    }
+        log(chalk.bold.green('软连接建立完成...'));
+        log(chalk.bold.green('工作流初始化完成...'));
+        log(chalk.bold.green('进入工作流...'));
+    },
+	createNodeModules:function(){
+		if(win32){
+			require('child_process').exec(`mklink /d .\\node_modules ${process.env.APPDATA}\\npm\\node_modules\\${yoName}\\app\\templates\\node_modules`)
+		} else{
+			this.spawnCommand('ln', ['-s', `/usr/local/lib/node_modules/${yoName}/app/templates/node_modules`, 'node_modules']);
+            this.spawnCommand('gulp');
+		}
+	}
 })
