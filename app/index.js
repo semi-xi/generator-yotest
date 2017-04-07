@@ -9,36 +9,37 @@ var generators = require('yeoman-generator'),
     generatorName = 'gulp',
     win32 = process.platform === 'win32',
     filePath = process.env[win32 ? 'USERPROFILE' : HOME],
-    modulePath = path.join(filePath,'.'+process.env.npm_package_name,'node_modules')
-    yoName = '';
-    log(process)
-    function createNodeModules(){
-        if(win32){
-        	require('child_process').exec(`mklink /d .\\node_modules ${modulePath}`)
-        } else{
-        	this.spawnCommand('ln', ['-s', modulePath , 'node_modules']);
-
-        }
-
-    }
+    yeoname = require('../package.json').name,
+    modulePath = path.join(filePath, '.' + yeoname, 'node_modules');
+//window  不兼容
+// function createNodeModules() {
+//     log('ccc')
+//     if (win32) {
+//         require('child_process').exec(`mklink /d .\\node_modules ${modulePath}`)
+//     } else {
+//         this.spawnCommand('ln', ['-s', modulePath, 'node_modules']);
+//     }
+// }
 module.exports = generators.Base.extend({
     constructor: function() {
         generators.Base.apply(this, arguments);
-        yoName = require('../package.json').name;
+        //是否有node_modules
+        var modules = glob.sync('+(node_modules)');
+        // log(!_.includes(modules,'node_modules'))
+        if (!_.includes(modules, 'node_modules')) {
+            if (win32) {
+                require('child_process').exec(`mklink /d .\\node_modules ${modulePath}`)
+            } else {
+                this.spawnCommand('ln', ['-s', modulePath, 'node_modules']);
+            }
+            log(chalk.bold.green('已建立软连接...'));
+        }
+
         var dirs = glob.sync('+(src)');
         //now _.contains has been abandoned by lodash,use _.includes
         if (_.includes(dirs, 'src')) {
-            //是否有node_modules
-            var modules = glob.sync('+(node_modules)');
-            // log(!_.includes(modules,'node_modules'))
-            if(!_.includes(modules,'node_modules')){
-                createNodeModules.bind(this);
-                log(chalk.bold.green('已建立软连接...退出'));
-
-            } else{
-                log(chalk.bold.green('资源已经初始化，退出...'));
-            }
             setTimeout(function() {
+                log(chalk.bold.green('资源已经初始化，退出...'));
                 process.exit(1);
             }, 200);
         }
@@ -86,7 +87,7 @@ module.exports = generators.Base.extend({
             this.templatePath('package.json'),
             this.destinationPath('package.json'), {
                 projectName: this.projectName,
-                style :this.projectAssets
+                style: this.projectAssets
             }
         );
     },
@@ -95,23 +96,47 @@ module.exports = generators.Base.extend({
         var dirs = glob.sync('+(node_modules)');
         if (!_.includes(dirs, 'node_modules')) {
             // 创建软连接
-            createNodeModules.bind(this);
-
+            if (win32) {
+                require('child_process').exec(`mklink /d .\\node_modules ${modulePath}`)
+            } else {
+                this.spawnCommand('ln', ['-s', modulePath, 'node_modules']);
+            }
+            log(chalk.bold.green('软连接建立完成...'));
         }
-        this.installDependencies({
-	    	bower      : false,
- 			npm        : true,
-	    	skipInstall: false,
-	    	callback   : () => {
-                log('自定义安装完毕');
-
-
-			}
-	    });
-        log(chalk.bold.green('软连接建立完成...'));
-        log(chalk.bold.green('工作流初始化完成...'));
-        log(chalk.bold.green('进入工作流...'));
-        this.spawnCommand('gulp');
+        //执行npm install 第1次会强制安装，后面的话会自动判断模块存在的话就不安装
+        //但是这样子会出现 网络不好就安装不了的情况
+        // this.installDependencies({
+        //     bower: false,
+        //     npm: true,
+        //     skipInstall: false,
+        //     callback: () => {
+        //         log(chalk.bold.green('软连接建立完成...'));
+        //         log(chalk.bold.green('工作流初始化完成...'));
+        //         log(chalk.bold.green('进入工作流...'));
+        //         this.spawnCommand('gulp');
+        //     }
+        // });
+        //执行cnpm 安装
+        var cp = require('child_process').exec('cnpm install');
+        // var cp = this.spawnCommand('cnpm install');
+        cp.on('close', (code) => {
+            log(chalk.bold.green('初始化完成...'));
+            log(chalk.bold.green('进入工作流...'));
+            // this.spawnCommand('gulp');
+        });
+        // log(chalk.bold.green('正在初始化...'));
+        // cp.stdout.on('data', (data) => {
+        //     log(`stdout: ${data}`)
+        // })
+        // cp.stderr.on('data', (data) => {
+        //     console.log(`stderr: ${data}`);
+        // })
+        // cp.on('close', (code) => {
+        //     log(new Date().getTime() - time.getTime())
+        //     log(chalk.bold.green('初始化完成...'));
+        //     log(chalk.bold.green('进入工作流...'));
+        //     // this.spawnCommand('gulp');
+        // });
     },
 
 })
