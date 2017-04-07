@@ -9,7 +9,7 @@ var generators = require('yeoman-generator'),
     generatorName = 'gulp',
     win32 = process.platform === 'win32',
     yoName = '';
-
+    log(process)
     function createNodeModules(){
         if(win32){
         	require('child_process').exec(`mklink /d .\\node_modules ${process.env.APPDATA}\\npm\\node_modules\\${yoName}\\app\\templates\\node_modules`)
