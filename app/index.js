@@ -8,13 +8,15 @@ var generators = require('yeoman-generator'),
     del = require('del'),
     generatorName = 'gulp',
     win32 = process.platform === 'win32',
+    filePath = process.env[win32 ? 'USERPROFILE' : HOME],
+    modulePath = path.join(filePath,'.'+process.env.npm_package_name,'node_modules')
     yoName = '';
     log(process)
     function createNodeModules(){
         if(win32){
-        	require('child_process').exec(`mklink /d .\\node_modules ${process.env.APPDATA}\\npm\\node_modules\\${yoName}\\app\\templates\\node_modules`)
+        	require('child_process').exec(`mklink /d .\\node_modules ${modulePath}`)
         } else{
-        	this.spawnCommand('ln', ['-s', `/usr/local/lib/node_modules/${yoName}/app/templates/node_modules`, 'node_modules']);
+        	this.spawnCommand('ln', ['-s', modulePath , 'node_modules']);
 
         }
 
@@ -96,16 +98,16 @@ module.exports = generators.Base.extend({
             createNodeModules.bind(this);
 
         }
-        // this.installDependencies({
-	    // 	bower      : false,
- 	// 		npm        : true,
-	    // 	skipInstall: false,
-	    // 	callback   : () => {
-        //         log('自定义安装完毕');
-        //
-        //
-		// 	}
-	    // });
+        this.installDependencies({
+	    	bower      : false,
+ 			npm        : true,
+	    	skipInstall: false,
+	    	callback   : () => {
+                log('自定义安装完毕');
+
+
+			}
+	    });
         log(chalk.bold.green('软连接建立完成...'));
         log(chalk.bold.green('工作流初始化完成...'));
         log(chalk.bold.green('进入工作流...'));
