@@ -67,8 +67,9 @@ module.exports = generators.Base.extend({
                     value: 'npm',
                     checked: true
                 }, {
-                    name: 'cnpm',
-                    value: 'cnpm(mac不可选)'
+                    name: 'cnpm(mac不可选)',
+                    message: '模块安装方式',
+                    value: 'cnpm'
                 }]
             }
         ]
@@ -113,7 +114,6 @@ module.exports = generators.Base.extend({
         switch (this.projectInstall) {
             case 'npm':
                 //执行npm install
-                log('999')
                 self.installDependencies({
                     bower: false,
                     npm: true,
@@ -123,7 +123,6 @@ module.exports = generators.Base.extend({
                         self.spawnCommand('gulp');
                     }
                 });
-                log('10000')
                 break;
             case 'cnpm':
                 if(!win32) break;
