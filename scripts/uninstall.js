@@ -8,5 +8,6 @@ var fs = require('fs'),
  console.log('正在删除node_modules文件...')
 del([yoFile], {
     force: true
+}).then((path)=>{
+     // console.log('已删除node_modules文件...')
 })
- console.log('已删除node_modules文件...')
